@@ -9,45 +9,26 @@ class steamApi:
         dfReturnApi = pd.DataFrame.from_dict(jsonRet)
         dfList = pd.DataFrame(dfReturnApi['applist'])
         dfAppList = pd.DataFrame(dfList['applist']['apps'])
-        
+            
         json_filename = 'list_steam_game2.json'
 
         dfAppList.to_json(path_or_buf=json_filename,orient='index')
 
         if(self.jsonValidator(json_filename) == 1):
-            print('OK')
+            self.csvListAdvice(json_filename)
         else:
             print('KO')
     
-    def csvListAdvice(limit = 10):
+    def csvListAdvice(json_name = 'list_steam_game2.json'):
         dfOut = pd.DataFrame()
 
-        dfGameList = pd.read_json('list_steam_game2.json',orient='index')
-        dfGameList = dfGameList[dfGameList['name'] != '']
-        if(limit!=0):
-            miniGameList = dfGameList[0:limit]
-        else :
-            miniGameList = dfGameList
-            
-        # print(miniGameList.columns.tolist())
+        dfGameList = pd.read_json(json_name,orient='index')
+        dfGameList = dfGameList[dfGameList['name'] != ''] # for cleaning all test steam game
+        
         for index, row in miniGameList.iterrows():
-            # print(row['appid'])
-            # response = requests.get("https://store.steampowered.com/appreviews/1063730?json=1")
-            response = requests.get("https://store.steampowered.com/appreviews/"+str(row['appid'])+"?json=1")
-            jsonRet = response.json()
-            # print(row['appid'])
-            if(jsonRet['success'] == 1): #if query is ok
-                dfListQs = pd.DataFrame(jsonRet['query_summary'],index=[0])
-                print(dfListQs.columns.tolist())
-                dfListR = pd.DataFrame(jsonRet['reviews'])
-                # print(dfListR.columns.tolist())
-                # dfListA = pd.DataFrame(dfListR['author'])
-                # for indexR, rowR in dfListR.iterrows():
-                    # dfListAR = pd.DataFrame(dfListA.iloc[indexA]['author'],index=[0])
-                    # print(rowR)
-                    # print(dfListR.columns.tolist())
-                print(dfListR.columns.tolist())
-            # dfOut[index] = 
+            dfAppDetail = self.getAppDetail(str(row['appid']))
+            dfAppReview = self.getAppReview(str(row['appid']))
+            
 
     def jsonValidator(path = 'list_steam_game2.json'):
         f = open(path, 'r')
@@ -56,6 +37,22 @@ class steamApi:
 
         return 1
 
-steamApi.csvListAdvice(10,10)
-# steamApi.callGetGameListToCsv()
-# steamApi.jsonValidator()
+    def getAppReview(appId = 730):
+            response = requests.get("https://store.steampowered.com/appreviews/"+str(appId)+"?json=1")
+            jsonRet = response.json()
+            if(jsonRet['success'] == 1): #if query is ok
+                finalDf = pd.DataFrame(columns=['query_summary','reviews'])
+                finalDf.loc[0] = [jsonRet['query_summary'],jsonRet['reviews']] 
+                return finalDf
+
+    def getAppDetail(appId = 730):
+        responseGameReview = requests.get("https://store.steampowered.com/api/appdetails?appids="+str(appId))
+        jsonRet = responseGameReview.json()
+        dfRet = pd.DataFrame(columns=['categories','platforms','genres','metacritic','developers','publishers','name','is_free','recommendations','release_date','required_age'])
+        if(jsonRet[str(appId)]['success'] == True):
+            workPath = jsonRet[str(appId)]['data']
+            dfRet.loc[0] = [workPath['categories'],workPath['platforms'],workPath['genres'],workPath['metacritic'],workPath['developers'],workPath['publishers'],workPath['name'],workPath['is_free'],workPath['recommendations'],workPath['release_date'],workPath['required_age']]
+            return dfRet
+        
+
+steamApi.callGetGameListToCsv()
