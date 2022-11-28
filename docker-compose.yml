@@ -17,31 +17,145 @@ services:
         aliases:
           - mariadb
 
-  elasticsearch:
-    image: elasticsearch:8.5.1
-    environment:
-      - xpack.security.enabled=false
-      - "discovery.type=single-node"
-    networks:
-      steam-satcli:
-        aliases:
-          - elasticsearch
-    ports:
-      - 9200:9200
+#  elasticsearch:
+#    image: elasticsearch:8.5.1
+#    environment:
+#      - xpack.security.enabled=false
+#      - "discovery.type=single-node"
+#    volumes:
+#      - ./docker/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+#    networks:
+#      steam-satcli:
+#        aliases:
+#          - elasticsearch
+#    ports:
+#      - 9200:9200
+#
+#  kibana:
+#    image: kibana:8.5.1
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+#    networks:
+#      steam-satcli:
+#        aliases:
+#          - kibana
+#    depends_on:
+#      - elasticsearch
+#    ports:
+#      - 5601:5601
 
-  kibana:
-    image: kibana:8.5.1
+  postgres:
+    image: postgres:15.1
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: airflow
+      POSTGRES_DB: airflow
+      POSTGRES_PASSWORD: eiCoosha7keiquohP3haWe8eox6heiqu3hathieza5boh1leej
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+     - type: volume
+       source: pgdata
+       target: /var/lib/postgresql/data
+       volume:
+         nocopy: true
     networks:
       steam-satcli:
         aliases:
-          - kibana
+          - postgres
+
+  rabbitmq:
+    image: rabbitmq:3.9.10
+    networks:
+      steam-satcli:
+        aliases:
+          - rabbitmq
+
+  webui:
+    image: steam-cli/airflow:private
+    entrypoint: ["/webui.sh"]
     depends_on:
-      - elasticsearch
+      - postgres
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: ./docker/airflow/Dockerfile
+    environment:
+      AIRFLOW_HOME: /opt/airflow
     ports:
-      - 5601:5601
+      - "80:80"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      steam-satcli:
+        aliases:
+          - webui
+
+  scheduler:
+    image: steam-cli/airflow:private
+    entrypoint: ["/scheduler.sh"]
+    depends_on:
+      - webui
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      steam-satcli:
+        aliases:
+          - scheduler
+
+  worker-1:
+    image: steam-cli/airflow:private
+    entrypoint: ["/worker.sh"]
+    depends_on:
+      - webui
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      steam-satcli:
+        aliases:
+          - worker-1
+          
+  worker-2:
+    image: steam-cli/airflow:private
+    entrypoint: ["/worker.sh"]
+    depends_on:
+      - webui
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      steam-satcli:
+        aliases:
+          - worker-2
+          
+  flower:
+    image: steam-cli/airflow:private
+    entrypoint: ["/flower.sh"]
+    depends_on:
+      - webui
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+    volumes:
+      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    ports:
+      - "8080:5555"
+    networks:
+      steam-satcli:
+        aliases:
+          - flower
 
 networks:
   steam-satcli:
     driver: bridge
+    
+volumes:
+  pgdata:
+
