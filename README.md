@@ -12,6 +12,7 @@ example:
 # dans le fichier .env 
 
 MARIADB_PASSWORD=<your_secret>
+PGSQL_PASSWORD=<your_other_secret>
 ```
 
 ## Liste des API steam
