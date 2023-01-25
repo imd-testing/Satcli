@@ -1,20 +1,11 @@
 import requests
 import pandas as pd
-import json
-
 class SteamApi():
     def request_todo_list(self):
         response = requests.get("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
-        jsonRet = response.json()
-        dfReturnApi = pd.DataFrame.from_dict(jsonRet)
-        dfList = pd.DataFrame(dfReturnApi['applist'])
-        dfAppList = pd.DataFrame(dfList['applist']['apps'])
-            
-        json_filename = 'list_steam_game2.json'
+        jsonRet = response.json().get('applist').get('apps')
 
-        dfAppList.to_json(path_or_buf=json_filename,orient='index')
+        # L'API steam peut renvoyer plusieurs fois la même entrée pour des raisons que j'ignore.
+        df = pd.DataFrame.from_dict(jsonRet).drop_duplicates()
 
-        if(self.jsonValidator(json_filename) == 1):
-            self.csvListAdvice(json_filename)
-        else:
-            print('KO')
+        return df

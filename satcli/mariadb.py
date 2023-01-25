@@ -73,5 +73,17 @@ class Mariadb():
         read_cursor.close()
         return result
         
-    def ingest_todo_list(self, data):
-        pass
+    def ingest_todo_list(self, df):
+        sql = ('INSERT INTO steampowered.todo_list ( id, app_name ) VALUES (%s, %s)')
+        cur = self.cursor()
+        cur.execute('SET NAMES utf8mb4;')
+        
+        for index, row in df.iterrows():
+            cur.execute(sql, (
+                row[0], 
+                row[1]
+        ))
+            
+        cur.close()
+        self.con.commit()
+
