@@ -6,6 +6,9 @@ class SteamApi():
         jsonRet = response.json().get('applist').get('apps')
 
         # L'API steam peut renvoyer plusieurs fois la même entrée pour des raisons que j'ignore.
-        df = pd.DataFrame.from_dict(jsonRet).drop_duplicates()
+        df = pd.DataFrame.from_dict(jsonRet) \
+            .drop_duplicates() \
+            .rename(columns = {"appid" : "id", "name": "app_name"}) \
+            .set_index('id')
 
         return df
