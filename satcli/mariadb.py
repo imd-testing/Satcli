@@ -2,14 +2,24 @@ import mysql.connector as Connector
 import getpass
 import os
 
+class Cursor(Connector.cursor.MySQLCursor):
+    def __init__(self, connection):
+        self.is_closed = False
+        super().__init__(connection)
+        
+    def close(self):
+        if self.is_closed is False:
+            self.is_closed = True
+            super().close()
+
 class Mariadb():
     def __init__(self):
         self.con = None
-        self.cursor = None
-        
+
         self.base_dir = os.path.dirname(os.path.realpath(__file__))
         self.env = self.read_env()
         self.open()
+        self.cursor_list = []
 
     def read_env(self):
         config = {}
@@ -34,7 +44,7 @@ class Mariadb():
         password = self.env.get('MARIADB_PASSWORD')
         if password is None:
             raise 'You need to define a MARIADB_PASSWORD in a .env file at your project root.'
-        
+
         self.con = Connector.connect(
             host = 'localhost',
             user = 'steampowered',
@@ -44,4 +54,24 @@ class Mariadb():
         )
 
     def close(self):
+        for c in self.cursor_list:
+            c.close()
+
         self.con.close()
+        
+    def cursor(self):
+        cur = self.con.cursor(cursor_class = Cursor)
+        self.cursor_list.append(cur)
+        
+        return cur
+        
+    def read_todo_list(self):
+        read_cursor = self.cursor()
+        read_cursor.execute('SELECT * FROM steampowered.todo_list')
+        result = read_cursor.fetchall()
+        
+        read_cursor.close()
+        return result
+        
+    def ingest_todo_list(self, data):
+        pass
