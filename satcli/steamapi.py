@@ -12,3 +12,16 @@ class SteamApi():
             .set_index('id')
 
         return df
+
+    def request_details(self, app_id):
+        response = requests.get(f"https://store.steampowered.com/api/appdetails?appids={app_id}")
+        
+        result = response.json().get(str(app_id))
+        
+        status = result.get('success')
+        
+        if status is False:
+            return False
+            
+        payload = result.get('data')
+        print ( payload )

@@ -18,7 +18,10 @@ class Mariadb():
             raise 'You need to define a MARIADB_PASSWORD in a .env file at your project root.'
 
 
-        self.engine = create_engine(f"mysql+mysqlconnector://steampowered:{password}@localhost:{port}/steampowered")
+        self.engine = create_engine(f"mysql+mysqlconnector://steampowered:{password}@localhost:{port}/steampowered" )
+        
+    def close(self):
+        self.engine.dispose()
 
     def read_env(self):
         config = {}
@@ -36,16 +39,24 @@ class Mariadb():
         return config
 
     def read_todo_list(self):
-        df = pd.read_sql('SELECT id, app_name FROM steampowered.todo_list', self.engine,
+        df = pd.read_sql('SELECT id, app_name, last_import_details FROM steampowered.todo_list', self.engine,
             index_col = 'id'
         )
 
         return df
         
     def ingest_todo_list(self, df):
-        with self.engine.connect() as con:
-            con.execution_options(autocommit = True).execute("TRUNCATE TABLE steampowered.todo_list;")
+        with self.engine.begin() as con:
+            con.execute("TRUNCATE TABLE steampowered.todo_list;")
 
-            con.execution_options(autocommit = False).execute("SET NAMES utf8mb4;")
+            con.execute("SET NAMES utf8mb4;")
 
             df.to_sql('todo_list', con = con, if_exists = 'append')
+
+    def mark_todo_failed_on_details(self, app_id):
+        with self.engine.begin() as con:
+            con.execute(
+                'UPDATE steampowered.todo_list SET last_import_details = NOW(), failed_on_details = 1 WHERE id = %s',
+                ( app_id, )
+            )
+

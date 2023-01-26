@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS steampowered.todo_list (
 	app_name varchar(2028) NOT NULL,
 	last_import_details datetime NULL DEFAULT NULL,
 	last_import_reviews datetime NULL DEFAULT NULL,
+	failed_on_details tinyint,
+	failed_on_reviews tinyint,
 	PRIMARY KEY ( id )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
