@@ -5,8 +5,17 @@ CREATE TABLE IF NOT EXISTS steampowered.todo_list (
 	app_name varchar(2028) NOT NULL,
 	last_import_details datetime NULL DEFAULT NULL,
 	last_import_reviews datetime NULL DEFAULT NULL,
+	failed_on_details tinyint,
+	failed_on_reviews tinyint,
 	PRIMARY KEY ( id )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS steampowered.types (
+	id int unsigned auto_increment,
+	label varchar(2028),
+	PRIMARY KEY ( id )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 CREATE TABLE IF NOT EXISTS steampowered.controller_support (
 	id int unsigned auto_increment,
@@ -45,6 +54,7 @@ CREATE TABLE IF NOT EXISTS steampowered.genres (
 
 CREATE TABLE IF NOT EXISTS steampowered.applications (
 	id int unsigned,
+	id_type int unsigned,
 	id_controller_support int unsigned,
 
 	app_name varchar(2028),
@@ -60,7 +70,8 @@ CREATE TABLE IF NOT EXISTS steampowered.applications (
 	is_free tinyint unsigned,
 
 	PRIMARY KEY ( id ),
-	CONSTRAINT `fk_applications_controller_support` FOREIGN KEY (id_controller_support) REFERENCES controller_support (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+	CONSTRAINT `fk_applications_controller_support` FOREIGN KEY (id_controller_support) REFERENCES controller_support (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	CONSTRAINT `fk_applications_type` FOREIGN KEY (id_type) REFERENCES types (id) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS steampowered.app_2_developers (
