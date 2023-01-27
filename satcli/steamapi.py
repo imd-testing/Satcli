@@ -14,14 +14,22 @@ class SteamApi():
         return df
 
     def request_details(self, app_id):
-        response = requests.get(f"https://store.steampowered.com/api/appdetails?appids={app_id}")
-        
-        result = response.json().get(str(app_id))
-        
-        status = result.get('success')
-        
-        if status is False:
-            return False
+        response = requests.get(f"https://store.steampowered.com/api/appdetails?appids={app_id}",
+            headers={"Accept-Language":"en-US"}
+        )
+        if response.status_code == 200:
+            result = response.json().get(str(app_id))
             
-        payload = result.get('data')
-        print ( payload )
+            status = result.get('success')
+            
+            if status is False:
+                return False
+
+            payload = result.get('data')
+
+            return payload
+        else:
+            print( f"HTTP RETURN: {response.status_code}" )
+            print(response.headers)
+
+            raise "GET FAILED"
