@@ -1,5 +1,3 @@
-#!/bin/python3
-
 import sys
 import os
 import tempfile
@@ -8,10 +6,8 @@ import pandas as pd
 import json
 import time
 
-
 from satcli import Mariadb, getEngine
 from satcli import SteamApi
-
 
 base_dir = os.path.exists(os.path.dirname(os.path.realpath(__file__)))
 engine = getEngine()
