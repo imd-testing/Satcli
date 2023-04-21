@@ -11,8 +11,9 @@ example:
 ```bash
 # dans le fichier .env 
 
-MARIADB_PASSWORD=<your_secret>
 PGSQL_PASSWORD=<your_other_secret>
+AIRFLOW_USER_LOGIN=<your_desired_username>
+AIRFLOW_USER_PASSWORD=<your_desired_password>
 ```
 
 ## Liste des API steam

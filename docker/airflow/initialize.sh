@@ -28,11 +28,11 @@ fi
 
 echo "CREATING USER"
 if airflow users create \
-	--username admin \
+	--username "$AIRFLOW_USER_LOGIN" \
 	--firstname John \
 	--lastname Doe \
 	--role Admin \
-	--password "steampowered" \
+	--password "$AIRFLOW_USER_PASSWORD" \
 	--email jdoe@example.com \
 	>/tmp/airflow-db-init.log 2>&1
 then

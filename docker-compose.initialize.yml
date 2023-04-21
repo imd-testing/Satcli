@@ -42,6 +42,8 @@ services:
       AIRFLOW_HOME: /opt/airflow
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW_USER_LOGIN: ${AIRFLOW_USER_LOGIN}
+      AIRFLOW_USER_PASSWORD: ${AIRFLOW_USER_PASSWORD}
     ports:
       - "80:80"
     volumes:

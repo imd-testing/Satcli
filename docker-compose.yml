@@ -73,6 +73,7 @@ services:
       - "80:80"
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./src:/opt/src
       - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     networks:
       steam-satcli:
@@ -90,6 +91,7 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./src:/opt/src
       - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     networks:
       steam-satcli:
@@ -107,6 +109,7 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./src:/opt/src
       - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     networks:
       steam-satcli:
