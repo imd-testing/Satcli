@@ -1,27 +1,6 @@
 version: "3.2"
 
 services:
-#  mariadb:
-#    image: mariadb:10.10.2
-#    environment:
-#      - MARIADB_DATABASE=steampowered
-#      - MARIADB_USER=steampowered
-#      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
-#      - MARIADB_RANDOM_ROOT_PASSWORD=true
-#    ports:
-#      - "${MARIADB_PORT:-3306}:3306"
-#    volumes:
-#      - ./sql/:/docker-entrypoint-initdb.d/
-#      - type: volume
-#        source: mydata
-#        target: /var/lib/mysql
-#        volume:
-#          nocopy: true
-#    networks:
-#      steam-satcli:
-#        aliases:
-#          - mariadb
-
 #  elasticsearch:
 #    image: elasticsearch:8.5.1
 #    environment:
@@ -70,6 +49,8 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.9.10
+    volumes:
+      - ./config/rabbitmq.conf:/etc/rabbitmq/conf.d/20-custom.conf
     networks:
       steam-satcli:
         aliases:

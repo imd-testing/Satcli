@@ -22,6 +22,8 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.9.10
+    volumes:
+      - ./config/rabbitmq.conf:/etc/rabbitmq/conf.d/20-custom.conf
     networks:
       steam-satcli:
         aliases:
