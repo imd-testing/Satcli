@@ -1,26 +1,26 @@
 version: "3.2"
 
 services:
-  mariadb:
-    image: mariadb:10.10.2
-    environment:
-      - MARIADB_DATABASE=steampowered
-      - MARIADB_USER=steampowered
-      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
-      - MARIADB_RANDOM_ROOT_PASSWORD=true
-    ports:
-      - "${MARIADB_PORT:-3306}:3306"
-    volumes:
-      - ./sql/:/docker-entrypoint-initdb.d/
-      - type: volume
-        source: mydata
-        target: /var/lib/mysql
-        volume:
-          nocopy: true
-    networks:
-      steam-satcli:
-        aliases:
-          - mariadb
+#  mariadb:
+#    image: mariadb:10.10.2
+#    environment:
+#      - MARIADB_DATABASE=steampowered
+#      - MARIADB_USER=steampowered
+#      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+#      - MARIADB_RANDOM_ROOT_PASSWORD=true
+#    ports:
+#      - "${MARIADB_PORT:-3306}:3306"
+#    volumes:
+#      - ./sql/:/docker-entrypoint-initdb.d/
+#      - type: volume
+#        source: mydata
+#        target: /var/lib/mysql
+#        volume:
+#          nocopy: true
+#    networks:
+#      steam-satcli:
+#        aliases:
+#          - mariadb
 
 #  elasticsearch:
 #    image: elasticsearch:8.5.1
@@ -76,8 +76,8 @@ services:
           - rabbitmq
 
   webui:
-    image: steam-cli/airflow:private
-    entrypoint: ["/webui.sh"]
+    image: formation/steampowered:1.0
+    entrypoint: ["${WEBUI_COMMAND:-/webui.sh}"]
     depends_on:
       - postgres
       - rabbitmq
@@ -92,14 +92,14 @@ services:
       - "80:80"
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     networks:
       steam-satcli:
         aliases:
           - webui
 
   scheduler:
-    image: steam-cli/airflow:private
+    image: formation/steampowered:1.0
     entrypoint: ["/scheduler.sh"]
     depends_on:
       - webui
@@ -109,14 +109,14 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     networks:
       steam-satcli:
         aliases:
           - scheduler
 
   worker-1:
-    image: steam-cli/airflow:private
+    image: formation/steampowered:1.0
     entrypoint: ["/worker.sh"]
     depends_on:
       - webui
@@ -126,31 +126,14 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     networks:
       steam-satcli:
         aliases:
           - worker-1
 
-  worker-2:
-    image: steam-cli/airflow:private
-    entrypoint: ["/worker.sh"]
-    depends_on:
-      - webui
-    environment:
-      AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
-    networks:
-      steam-satcli:
-        aliases:
-          - worker-2
-
   flower:
-    image: steam-cli/airflow:private
+    image: formation/steampowered:1.0
     entrypoint: ["/flower.sh"]
     depends_on:
       - webui
@@ -159,7 +142,7 @@ services:
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
     volumes:
-      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     ports:
       - "8080:5555"
     networks:
@@ -170,8 +153,6 @@ services:
 networks:
   steam-satcli:
     driver: bridge
-    
+
 volumes:
   pgdata:
-  mydata:
-
