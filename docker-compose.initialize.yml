@@ -1,0 +1,63 @@
+version: "3.2"
+
+services:
+  postgres:
+    image: postgres:15.1
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: airflow
+      POSTGRES_DB: airflow
+      POSTGRES_PASSWORD: ${PGSQL_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+     - type: volume
+       source: pgdata
+       target: /var/lib/postgresql/data
+       volume:
+         nocopy: true
+    networks:
+      steam-satcli:
+        aliases:
+          - postgres
+
+  rabbitmq:
+    image: rabbitmq:3.9.10
+    volumes:
+      - ./config/rabbitmq.conf:/etc/rabbitmq/conf.d/20-custom.conf
+    networks:
+      steam-satcli:
+        aliases:
+          - rabbitmq
+
+  initializer:
+    image: formation/steampowered:1.0
+    entrypoint: ["/initialize.sh"]
+    depends_on:
+      - postgres
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: ./docker/airflow/Dockerfile
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW_USER_LOGIN: ${AIRFLOW_USER_LOGIN}
+      AIRFLOW_USER_PASSWORD: ${AIRFLOW_USER_PASSWORD}
+    ports:
+      - "80:80"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      steam-satcli:
+        aliases:
+          - initializer
+
+networks:
+  steam-satcli:
+    driver: bridge
+
+volumes:
+  pgdata:
+
