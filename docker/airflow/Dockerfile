@@ -12,3 +12,4 @@ COPY ./docker/airflow/lib.sh /lib.sh
 COPY ./docker/airflow/rabbitmq.py /rabbitmq.py
 
 ENV SQLALCHEMY_SILENCE_UBER_WARNING=1
+ENV PIP_USER=false
