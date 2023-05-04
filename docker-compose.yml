@@ -31,9 +31,6 @@ services:
   postgres:
     image: postgres:15.1
     environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_USER: airflow
-      POSTGRES_DB: airflow
       POSTGRES_PASSWORD: ${PGSQL_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -67,8 +64,8 @@ services:
       dockerfile: ./docker/airflow/Dockerfile
     environment:
       AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
     ports:
       - "80:80"
     volumes:
@@ -87,8 +84,8 @@ services:
       - webui
     environment:
       AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/src
@@ -105,8 +102,9 @@ services:
       - webui
     environment:
       AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+      STEAMPOWERED_PG_PASSWORD: ${STEAMPOWERED_PG_PASSWORD}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/src
@@ -123,8 +121,8 @@ services:
       - webui
     environment:
       AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
     volumes:
       - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     ports:

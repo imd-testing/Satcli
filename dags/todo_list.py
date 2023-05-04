@@ -17,27 +17,29 @@ with DAG(dag_id = "todo_list", start_date = datetime(2023, 4, 21), schedule = No
     #hello >> airflow()
 
     @task.virtualenv(
-        task_id="virtualenv_python", requirements=["colorama==0.4.0"], system_site_packages=False
+        task_id = "virtualenv_python",
+        system_site_packages = False
     )
     def callable_virtualenv():
         """
-        Example function that will be performed in a virtual environment.
-
-        Importing at the module level ensures that it will not attempt to import the
-        library before it is installed.
+        We need to manually move our sources so we can build our project in the container, as PIP is made by peoples too stupid
+        to understand the very concept of configurable build PATH.
         """
-        from time import sleep
 
-        from colorama import Back, Fore, Style
+        import subprocess
+        import sys
+        import shutil
+        import tempfile
+        
+        with tempfile.TemporaryDirectory() as dest:
+            target = f"{dest}/src"
+            
+            shutil.copytree("/opt/src", target)
+            subprocess.check_call([sys.executable, "-m", "pip", "install", target])
+        
+        from steampowered import test_function
 
-        print(Fore.RED + "some red text")
-        print(Back.GREEN + "and with a green background")
-        print(Style.DIM + "and in dim text")
-        print(Style.RESET_ALL)
-        for _ in range(4):
-            print(Style.DIM + "Please wait...", flush=True)
-            sleep(1)
-        print("Finished")
+        test_function()
 
     virtualenv_task = callable_virtualenv()
 
