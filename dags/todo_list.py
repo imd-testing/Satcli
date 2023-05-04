@@ -3,24 +3,13 @@ from datetime import datetime
 from airflow import DAG
 from airflow.decorators import task
 
-# A DAG represents a workflow, a collection of tasks
 with DAG(dag_id = "todo_list", start_date = datetime(2023, 4, 21), schedule = None) as dag:
 
-    # Tasks are represented as operators
-    # hello = BashOperator(task_id="todo_list", bash_command="echo hello")
-
-    @task()
-    def airflow():
-        print("airflow")
-
-    # Set dependencies between tasks
-    #hello >> airflow()
-
     @task.virtualenv(
-        task_id = "virtualenv_python",
+        task_id = "add_to_todo_list",
         system_site_packages = False
     )
-    def callable_virtualenv():
+    def add_to_todo_list_container():
         """
         We need to manually move our sources so we can build our project in the container, as PIP is made by peoples too stupid
         to understand the very concept of configurable build PATH.
@@ -37,10 +26,9 @@ with DAG(dag_id = "todo_list", start_date = datetime(2023, 4, 21), schedule = No
             shutil.copytree("/opt/src", target)
             subprocess.check_call([sys.executable, "-m", "pip", "install", target])
         
-        from steampowered import test_function
+        from steampowered import add_to_todolist
 
-        test_function()
+        add_to_todolist()
 
-    virtualenv_task = callable_virtualenv()
+    add_to_todo_list_task = add_to_todo_list_container()
 
-    virtualenv_task >> airflow()

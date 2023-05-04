@@ -9,6 +9,7 @@ x-airflow-common: &airflow-common
     AIRFLOW_HOME: /opt/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+    STEAMPOWERED__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://steampowered:${STEAMPOWERED_PG_PASSWORD}@postgres/steampowered
   volumes:
     - ./dags:/opt/airflow/dags
     - ./src:/opt/src
