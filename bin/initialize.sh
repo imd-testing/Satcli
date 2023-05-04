@@ -7,10 +7,14 @@ BASE_DIR=$( realpath $( dirname "${BASH_SOURCE[0]}" )/.. )
 PROJECT_NAME=$( basename "$BASE_DIR")
 VOLUME_NAME="${PROJECT_NAME}_pgdata"
 COMPOSE="docker-compose -f $BASE_DIR/docker-compose.initialize.yml --project-directory $BASE_DIR"
+COMPOSE_START="docker-compose -f $BASE_DIR/docker-compose.yml --project-directory $BASE_DIR"
+COMPOSE_EXTRA="docker-compose -f $BASE_DIR/docker-compose.extra.yml --project-directory $BASE_DIR"
 
 if docker volume ls -q | grep -q "$VOLUME_NAME"
 then
 	echo "VOLUME $VOLUME_NAME, deleting."
+	$COMPOSE_START rm --force --stop -v
+	$COMPOSE_EXTRA rm --force --stop -v
 	$COMPOSE down
 	docker volume rm $VOLUME_NAME
 fi

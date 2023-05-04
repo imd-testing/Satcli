@@ -12,7 +12,8 @@ x-airflow-common: &airflow-common
     STEAMPOWERED__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://steampowered:${STEAMPOWERED_PG_PASSWORD}@postgres/steampowered
   volumes:
     - ./dags:/opt/airflow/dags
-    - ./src:/opt/src
+    - ./src/pyproject.toml:/opt/steampowered/pyproject.toml
+    - ./src/steampowered:/opt/steampowered/steampowered
     - ./config/airflow.cfg:/opt/airflow/airflow.cfg
   depends_on:
     rabbitmq:

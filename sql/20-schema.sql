@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS public.todo_list (
 	failed_on_reviews smallint,
 	PRIMARY KEY ( date_last_import, id )
 );
+
+ALTER TABLE public.todo_list OWNER TO steampowered;
 --
 --CREATE TABLE IF NOT EXISTS steampowered.types (
 --	id int unsigned auto_increment,
