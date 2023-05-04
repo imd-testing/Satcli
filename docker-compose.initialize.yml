@@ -1,4 +1,4 @@
-version: "3.2"
+version: "3.8"
 
 services:
   postgres:
@@ -17,6 +17,10 @@ services:
      - type: bind
        source: ./sql
        target: /docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
     networks:
       steam-satcli:
         aliases:
@@ -26,6 +30,11 @@ services:
     image: rabbitmq:3.9.10
     volumes:
       - ./config/rabbitmq.conf:/etc/rabbitmq/conf.d/20-custom.conf
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
     networks:
       steam-satcli:
         aliases:
@@ -51,6 +60,11 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       steam-satcli:
         aliases:
