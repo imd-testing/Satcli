@@ -2,15 +2,6 @@
 
 set -eEu
 
-source /lib.sh
-
-echo "WAITING FOR Postgres"
-waitPg
-
-echo "WAITING FOR Rabbitmq"
-waitRabbit
-
-
 if ! ( airflow db check 2>&1 | grep -q " does not exist" )
 then
 	echo "DATABASE already exists, reseting it."

@@ -1,0 +1,41 @@
+version: "3.2"
+
+services:
+  worker-2:
+    image: formation/steampowered:1.0
+    command: celery worker
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/src
+      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      steam-satcli:
+        aliases:
+          - worker-2
+          
+  worker-3:
+    image: formation/steampowered:1.0
+    command: celery worker
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/src
+      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      steam-satcli:
+        aliases:
+          - worker-3
+
+networks:
+  steam-satcli:
+    driver: bridge
+
+volumes:
+  pgdata:

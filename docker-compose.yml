@@ -1,4 +1,23 @@
-version: "3.2"
+version: "3.8"
+
+x-airflow-common: &airflow-common
+  image: formation/steampowered:1.0
+  build:
+    context: .
+    dockerfile: ./docker/airflow/Dockerfile
+  environment:
+    AIRFLOW_HOME: /opt/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_PG_PASSWORD}@postgres/airflow
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./src:/opt/src
+    - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
 
 services:
 #  elasticsearch:
@@ -31,9 +50,6 @@ services:
   postgres:
     image: postgres:15.1
     environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_USER: airflow
-      POSTGRES_DB: airflow
       POSTGRES_PASSWORD: ${PGSQL_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -42,6 +58,10 @@ services:
        target: /var/lib/postgresql/data
        volume:
          nocopy: true
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
     networks:
       steam-satcli:
         aliases:
@@ -51,84 +71,76 @@ services:
     image: rabbitmq:3.9.10
     volumes:
       - ./config/rabbitmq.conf:/etc/rabbitmq/conf.d/20-custom.conf
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
     networks:
       steam-satcli:
         aliases:
           - rabbitmq
 
   webui:
+    <<: *airflow-common
     image: formation/steampowered:1.0
-    entrypoint: ["${WEBUI_COMMAND:-/webui.sh}"]
-    depends_on:
-      - postgres
-      - rabbitmq
-    build:
-      context: .
-      dockerfile: ./docker/airflow/Dockerfile
-    environment:
-      AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
+    command: webserver
     ports:
       - "80:80"
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./src:/opt/src
-      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     networks:
       steam-satcli:
         aliases:
           - webui
 
   scheduler:
-    image: formation/steampowered:1.0
-    entrypoint: ["/scheduler.sh"]
-    depends_on:
-      - webui
-    environment:
-      AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./src:/opt/src
-      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     networks:
       steam-satcli:
         aliases:
           - scheduler
 
   worker-1:
-    image: formation/steampowered:1.0
-    entrypoint: ["/worker.sh"]
-    depends_on:
-      - webui
-    environment:
-      AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./src:/opt/src
-      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    <<: *airflow-common
+    command: celery worker
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     networks:
       steam-satcli:
         aliases:
           - worker-1
 
   flower:
-    image: formation/steampowered:1.0
-    entrypoint: ["/flower.sh"]
-    depends_on:
-      - webui
-    environment:
-      AIRFLOW_HOME: /opt/airflow
-      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:${PGSQL_PASSWORD}@postgres/airflow
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${PGSQL_PASSWORD}@postgres/airflow
-    volumes:
-      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+    <<: *airflow-common
+    command: celery flower
     ports:
       - "8080:5555"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     networks:
       steam-satcli:
         aliases:
