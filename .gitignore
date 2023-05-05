@@ -4,3 +4,5 @@
 venv/*
 
 satcli/__pycache__/*
+**/*.egg-info
+**/__pycache__
